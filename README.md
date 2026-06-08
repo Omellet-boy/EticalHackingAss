@@ -1,5 +1,5 @@
 # EticalHackingAss
-##Initial Folder Setup
+Initial Folder Setup
 myeduconnect_project/
 │
 ├── docker-compose.yml
