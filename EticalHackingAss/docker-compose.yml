@@ -1,0 +1,35 @@
+version: '3.8'
+
+networks:
+  edu_net:
+    driver: bridge
+
+services:
+  # Web Portal Container (Your workspace for sniffing / Member 2's workspace for coding)
+  web_portal:
+    image: php:8.1-apache
+    container_name: myeduconnect_web
+    ports:
+      - "80:80" # Exposed on unencrypted port 80 for sniffing phase
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - edu_net
+    depends_on:
+      - db_server
+    entrypoint: >
+      sh -c "docker-php-ext-install mysqli pdo pdo_mysql && apache2-foreground"
+
+  # Database Container (Member 3's workspace for database configuration)
+  db_server:
+    image: mysql:5.7
+    container_name: myeduconnect_db
+    ports:
+      - "3306:3306" # Exposed to allow network scanning
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword123 # VULN: Predictable credential
+      MYSQL_DATABASE: myeduconnect
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - edu_net
