@@ -40,10 +40,14 @@ Re-run docker compose up -d and access the portal in your browser at:
 
 🔑 Default Seed Credentials
 Use these pre-configured user credentials to log in and navigate the portal:
-Role	Username / ID	Password	Target Features
-Student	student01	studentpass	Student Dashboard, Coursework Upload, Student Directory, Course Search, Mock Payment, Feedback Submission
-Admin	admin_mmu	SuperSecureAdmin2026!	Administrative Dashboard, Student Feedback Queue, Server System Statistics, Audit Logs
+Role	Username / ID	Password
+____________________________
+Username: student01	
+Password: studentpass	
 
+Admin	Username: admin_mmu	
+Password: SuperSecureAdmin2026!	
+______________________________
 
 📁 Project Directory Layout
 /uploads/ - Target directory for student assignments and profile picture uploads (automatically created inside the container with write permissions).
