@@ -47,8 +47,8 @@ Password: studentpass
 
 Admin	Username: admin_mmu	
 Password: SuperSecureAdmin2026!	
----
 
+---
 📁 Project Directory Layout
 /uploads/ - Target directory for student assignments and profile picture uploads (automatically created inside the container with write permissions).
 Dockerfile - Configures the Apache-PHP environment and installs standard MySQLi database extensions [1].
