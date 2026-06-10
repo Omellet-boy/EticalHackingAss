@@ -28,17 +28,23 @@ docker compose up --build -d
 ### 3. Access the Portal
 Once the containers are running, navigate to your web browser and open:
 👉 http://localhost
+
+
 🔧 Troubleshooting: Port 80 Conflicts
 If you run docker compose up and receive an error stating that Port 80 is already allocated or in use:
 It means another local service (such as Skype, local Apache, IIS, or XAMPP) is currently occupying Port 80 on your system.
 The Fix: Open docker-compose.yml in a text editor, find the ports mapping under the web service, and change "80:80" to "8080:80".
 Re-run docker compose up -d and access the portal in your browser at:
 👉 http://localhost:8080
+
+
 🔑 Default Seed Credentials
 Use these pre-configured user credentials to log in and navigate the portal:
 Role	Username / ID	Password	Target Features
 Student	student01	studentpass	Student Dashboard, Coursework Upload, Student Directory, Course Search, Mock Payment, Feedback Submission
 Admin	admin_mmu	SuperSecureAdmin2026!	Administrative Dashboard, Student Feedback Queue, Server System Statistics, Audit Logs
+
+
 📁 Project Directory Layout
 /uploads/ - Target directory for student assignments and profile picture uploads (automatically created inside the container with write permissions).
 Dockerfile - Configures the Apache-PHP environment and installs standard MySQLi database extensions [1].
