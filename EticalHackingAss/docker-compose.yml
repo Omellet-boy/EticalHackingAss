@@ -1,5 +1,6 @@
-version: '3.8'
-
+# MyEduConnect Docker setup:
+# - ./src is the web root mounted to /var/www/html in the web container.
+# - ./db/init.sql seeds the myeduconnect MySQL database on startup.
 networks:
   edu_net:
     driver: bridge
@@ -7,7 +8,9 @@ networks:
 services:
   # Web Portal Container (Your workspace for sniffing / Member 2's workspace for coding)
   web_portal:
-    image: php:8.1-apache
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: myeduconnect_web
     ports:
       - "80:80" # Exposed on unencrypted port 80 for sniffing phase
@@ -17,8 +20,6 @@ services:
       - edu_net
     depends_on:
       - db_server
-    entrypoint: >
-      sh -c "docker-php-ext-install mysqli pdo pdo_mysql && apache2-foreground"
 
   # Database Container (Member 3's workspace for database configuration)
   db_server:

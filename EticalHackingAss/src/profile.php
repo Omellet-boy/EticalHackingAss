@@ -1,0 +1,243 @@
+<?php
+// profile.php
+session_start();
+require_once 'db_connect.php';
+
+// Check if user is logged in
+if (!isset($_SESSION['user'])) {
+    header("Location: index.php");
+    exit;
+}
+
+$login_user = $_SESSION['user'];
+$user_id = $login_user['id'];
+
+// VULNERABLE IDOR IMPLEMENTATION:
+// 1. Read the user ID directly from the $_GET request.
+// 2. Fetch the user details from database.
+// 3. No check is made to verify if the requesting user has the right to view this profile.
+$profile_id = $_GET['id'] ?? null;
+
+if (!$profile_id) {
+    // Default to viewing own profile if no ID is specified
+    $profile_id = $user_id;
+}
+
+$profile_user = null;
+$error_message = "";
+
+// Convert to integer to prevent direct SQL injection on this parameter (keeping scope to IDOR)
+$profile_id_clean = intval($profile_id);
+
+$sql = "SELECT id, username, email, role, bio FROM users WHERE id = $profile_id_clean";
+$result = $conn->query($sql);
+
+if ($result && $result->num_rows > 0) {
+    $profile_user = $result->fetch_assoc();
+} else {
+    $error_message = "User profile not found.";
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Profile - MyEduConnect Student Portal</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --mmu-dark: #1E1E24;
+            --slate-bg: #2f3542;
+            --slate-hover: #57606f;
+            --slate-text: #ced6e0;
+            
+            /* Color-coded card headers */
+            --header-blue: #0A3663;
+            --header-teal: #079992;
+            --header-purple: #82589f;
+            --header-amber: #f39c12;
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Left-Sidebar Styling */
+        .sidebar-slate {
+            background-color: var(--slate-bg);
+            color: #ffffff;
+        }
+        .sidebar-slate .sidebar-heading {
+            font-weight: 700;
+            color: #ffffff;
+            border-bottom: 1px solid var(--slate-hover);
+        }
+        .sidebar-slate .list-group-item {
+            color: var(--slate-text);
+            background: transparent;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .sidebar-slate .list-group-item:hover {
+            color: #ffffff;
+            background-color: var(--slate-hover);
+        }
+        .sidebar-slate .list-group-item.active {
+            color: #ffffff;
+            background-color: var(--header-blue);
+            font-weight: 600;
+        }
+        
+        /* Cards */
+        .card-custom {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .card-header-custom {
+            background-color: var(--header-blue);
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 15px 20px;
+        }
+        
+        footer {
+            background-color: var(--mmu-dark);
+            color: #d1d1d1;
+            padding: 20px 0;
+            font-size: 0.9rem;
+            border-top: 3px solid #D12B2B;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Wrapper for flex-grow to push footer down -->
+    <div class="flex-grow-1">
+        
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-dark bg-dark px-3 py-2 shadow-sm">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1">MyEduConnect Student Portal</span>
+                <span class="navbar-text text-white d-none d-sm-inline">
+                    Welcome, <strong><?php echo htmlspecialchars($login_user['username']); ?></strong> (Role: <?php echo htmlspecialchars($login_user['role']); ?>)
+                </span>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <div class="row">
+                
+                <!-- Left Sidebar Column -->
+                <div class="col-md-3 col-lg-2 sidebar-slate py-4 px-3 d-flex flex-column" style="min-height: calc(100vh - 56px);">
+                    <h5 class="sidebar-heading px-3 pb-3 mb-3">Navigation</h5>
+                    <div class="list-group list-group-flush flex-grow-1">
+                        <a href="dashboard.php" class="list-group-item list-group-item-action rounded mb-1">Dashboard</a>
+                        <a href="profile.php?id=<?php echo $user_id; ?>" class="list-group-item list-group-item-action active rounded mb-1">Student Directory</a>
+                        <a href="courses.php" class="list-group-item list-group-item-action rounded mb-1">Courses</a>
+                        <a href="upload.php" class="list-group-item list-group-item-action rounded mb-1">Coursework</a>
+                        <a href="feedback.php" class="list-group-item list-group-item-action rounded mb-1">Feedback</a>
+                        <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin'): ?>
+                            <a href="admin.php" class="list-group-item list-group-item-action rounded mb-1">Admin Panel</a>
+                        <?php endif; ?>
+                        <a href="logout.php" class="list-group-item list-group-item-action rounded text-danger mt-4">Logout</a>
+                    </div>
+                </div>
+
+                <!-- Main Content Column -->
+                <div class="col-md-9 col-lg-10 py-4 px-4 bg-light">
+                    
+                    <div class="row justify-content-center">
+                        <div class="col-xl-8 col-lg-10 col-md-12">
+                            
+                            <!-- Academic Profile Card -->
+                            <div class="card card-custom">
+                                <div class="card-header card-header-custom d-flex justify-content-between align-items-center">
+                                    <span>Academic Profile Viewer</span>
+                                    <span class="badge bg-light text-dark">System ID: <?php echo $profile_id_clean; ?></span>
+                                </div>
+                                <div class="card-body p-4">
+                                    
+                                    <?php if (!empty($error_message)): ?>
+                                        <div class="alert alert-danger">
+                                            <?php echo $error_message; ?>
+                                        </div>
+                                        <div class="text-center">
+                                            <a href="dashboard.php" class="btn btn-primary" style="background-color: var(--header-blue); border: none;">Back to Dashboard</a>
+                                        </div>
+                                    <?php else: ?>
+                                        
+                                        <!-- Profile details -->
+                                        <div class="row mb-4">
+                                            <div class="col-sm-3 text-muted">Username:</div>
+                                            <div class="col-sm-9"><strong><?php echo htmlspecialchars($profile_user['username']); ?></strong></div>
+                                        </div>
+                                        
+                                        <div class="row mb-4">
+                                            <div class="col-sm-3 text-muted">Email Address:</div>
+                                            <div class="col-sm-9"><?php echo htmlspecialchars($profile_user['email']); ?></div>
+                                        </div>
+
+                                        <div class="row mb-4">
+                                            <div class="col-sm-3 text-muted">Role / Privilege:</div>
+                                            <div class="col-sm-9">
+                                                <span class="badge <?php echo $profile_user['role'] === 'admin' ? 'bg-danger' : 'bg-primary'; ?>">
+                                                    <?php echo htmlspecialchars(strtoupper($profile_user['role'])); ?>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-4">
+                                            <div class="col-sm-3 text-muted">Bio Description:</div>
+                                            <div class="col-sm-9 bg-light p-3 rounded border">
+                                                <?php 
+                                                    // Kept Stored XSS sink (raw output)
+                                                    echo $profile_user['bio'] ? $profile_user['bio'] : 'No biography registered.'; 
+                                                ?>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <!-- Navigation Actions -->
+                                        <div class="d-flex justify-content-between mt-4">
+                                            <a href="dashboard.php" class="btn btn-primary" style="background-color: var(--header-blue); border: none;">Return to Dashboard</a>
+                                            
+                                            <!-- Adjacent navigation targets to make BOLA/IDOR demonstration easier -->
+                                            <div>
+                                                <a href="profile.php?id=<?php echo $profile_id_clean - 1; ?>" class="btn btn-outline-secondary btn-sm me-1">&laquo; Previous Profile</a>
+                                                <a href="profile.php?id=<?php echo $profile_id_clean + 1; ?>" class="btn btn-outline-secondary btn-sm">Next Profile &raquo;</a>
+                                            </div>
+                                        </div>
+                                        
+                                    <?php endif; ?>
+
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- End flex-grow-1 wrapper -->
+
+    <!-- Footer placed outside main wrapper to cling to viewport bottom -->
+    <footer class="text-center py-4 mt-auto">
+        <div class="container">
+            <p class="mb-2"><strong>MyEduConnect &copy; 2026</strong></p>
+            <p class="mb-0 text-muted" style="font-size: 0.8rem;">
+                Authorized access only. Subject to the Personal Data Protection Act (PDPA) 2010 of Malaysia.
+            </p>
+        </div>
+    </footer>
+
+</body>
+</html>
