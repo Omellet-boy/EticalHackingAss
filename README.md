@@ -10,58 +10,66 @@ Before deploying the platform, ensure you have the following installed on your h
 
 ## 🚀 Deployment Instructions
 
-Follow these steps to deploy and run the MyEduConnect portal locally:
-
 ### 1. Get the Source Code
-- **Option A (Simplest):** Download the repository as a **ZIP file** from the GitHub web interface, extract the contents on your local machine.
-
-- **Option B (Git CLI):** Clone the repository directly using Git:
+- **Option A (Simplest):** Download the repository as a **ZIP file** from the GitHub web interface and extract it.
+- **Option B (Git CLI):** Clone the repository:
   ```bash
   git clone <your-private-github-repo-link>
-  cd "foldername"
-  
-### 2. Build and Start the Containers
-Run the following command in your terminal in vscode.
+  ```
 
+### 2. Build and Start the Containers
+The Docker setup lives inside the `EticalHackingAss/` project folder. Change into it first, then bring up the stack:
+```bash
+cd EticalHackingAss/EticalHackingAss
 docker compose up --build -d
+```
 
 ### 3. Access the Portal
-Once the containers are running, navigate to your web browser and open:
+Once the containers are running, open your browser at:
 👉 http://localhost
 
 ---
-🔧 Troubleshooting: Port 80 Conflicts
-If you run docker compose up and receive an error stating that Port 80 is already allocated or in use:
-It means another local service (such as Skype, local Apache, IIS, or XAMPP) is currently occupying Port 80 on your system.
-The Fix: Open docker-compose.yml in a text editor, find the ports mapping under the web service, and change "80:80" to "8080:80".
-Re-run docker compose up -d and access the portal in your browser at:
+
+## 🔧 Troubleshooting: Port 80 Conflicts
+If `docker compose up` reports that **Port 80 is already allocated / in use**, another local service
+(Skype, Apache, IIS, XAMPP, etc.) is occupying Port 80 on your system.
+
+**The fix:** open `EticalHackingAss/docker-compose.yml`, find the `ports` mapping under the
+`web_portal` service, and change `"80:80"` to `"8080:80"`. Re-run `docker compose up -d` and browse to:
 👉 http://localhost:8080
 
 ---
-🔑 Default Seed Credentials
-Use these pre-configured user credentials to log in and navigate the portal:
-Role	Username / ID	Password
 
-Username: student01	
-Password: studentpass	
+## 🔑 Default Seed Credentials
 
-Admin	Username: admin_mmu	
-Password: SuperSecureAdmin2026!	
+| Role    | Username    | Password                |
+|---------|-------------|-------------------------|
+| Student | `student01` | `studentpass`           |
+| Admin   | `admin_mmu` | `SuperSecureAdmin2026!` |
 
 ---
-📁 Project Directory Layout
-/uploads/ - Target directory for student assignments and profile picture uploads (automatically created inside the container with write permissions).
-Dockerfile - Configures the Apache-PHP environment and installs standard MySQLi database extensions [1].
-docker-compose.yml - Orchestrates the multi-container environment (web frontend and MySQL backend) [3].
-schema.sql - Database initialization script that automatically populates tables and seed data upon first startup [3].
-db_connect.php - Secure database connection logic.
-index.php - Portal login page (SQLi target).
-dashboard.php - Student Workspace (Stored XSS & Unrestricted File Upload target).
-profile.php - Student Directory (IDOR target).
-courses.php - Course Search (SQLi & XSS target).
-payment.php - Mock Checkout Page (Parameter Tampering target).
-transcript.php - Frontend Transcript Viewer (Loads API data dynamically).
-api_grades.php - Backend Transcript REST API (BOLA / IDOR target).
-admin.php - Administrative Control Panel (Broken Access Control target).
-feedback.php - Feedback submission form.
-logout.php - Destroys active user sessions.
+
+## 📁 Project Directory Layout
+
+```
+EticalHackingAss/                # Docker project root — run "docker compose" from here
+├── Dockerfile                   # Apache + PHP 7.4 image (EOL — outdated-package weakness), installs MySQLi
+├── docker-compose.yml           # Orchestrates web_portal (PHP) + db_server (MySQL 5.7) containers
+├── db/
+│   └── init.sql                 # DB init script: creates tables and seed data on first startup
+└── src/                         # Web root, mounted into the container at /var/www/html
+    ├── index.php                # Login page — SQL Injection target
+    ├── dashboard.php            # Student workspace — Stored XSS & Unrestricted File Upload target
+    ├── profile.php              # Student directory — IDOR target
+    ├── courses.php              # Course search — SQL Injection & XSS target
+    ├── payment.php              # Mock checkout — Parameter Tampering target
+    ├── transcript.php           # Frontend transcript viewer (loads API data dynamically)
+    ├── api_grades.php           # Backend transcript REST API — BOLA / IDOR target
+    ├── admin.php                # Administrative control panel — Broken Access Control target
+    ├── db_connect.php           # DB connection logic (connects as root with an empty password — credential weakness)
+    ├── feedback.php             # Feedback submission form
+    └── logout.php               # Destroys active user sessions
+```
+
+> `uploads/` is created automatically inside the `web_portal` container (with write permissions)
+> for student assignment and profile-picture uploads.
